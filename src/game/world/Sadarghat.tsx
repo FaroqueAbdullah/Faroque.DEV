@@ -49,6 +49,19 @@ const bowGeometry = (() => {
   return g
 })()
 
+/** A V of churned water spreading out behind the stern. */
+const wakeGeometry = (() => {
+  const s = new THREE.Shape()
+  s.moveTo(0, -HULL.width / 2)
+  s.lineTo(-20, -HULL.width * 1.6)
+  s.lineTo(-20, HULL.width * 1.6)
+  s.lineTo(0, HULL.width / 2)
+  s.closePath()
+  const g = new THREE.ShapeGeometry(s)
+  g.rotateX(-Math.PI / 2)
+  return g
+})()
+
 /** A Bangladeshi river launch: white hull, two or three stacked passenger decks, wheelhouse on top. Bow is +x. */
 function LaunchModel({ spec }: { spec: LaunchSpec }) {
   const night = useGame((s) => s.night)
@@ -194,9 +207,8 @@ function SailingLaunch({ spec, z, dir, speed, offset }: { spec: LaunchSpec; z: n
     <group ref={ref} position={[0, WATER_Y, z]} rotation={[0, dir > 0 ? 0 : Math.PI, 0]}>
       <LaunchModel spec={spec} />
       {/* wake */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-HULL.length / 2 - 7, 0.08, 0]}>
-        <planeGeometry args={[16, HULL.width * 1.2]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.28} depthWrite={false} />
+      <mesh geometry={wakeGeometry} position={[-HULL.length / 2, 0.08, 0]}>
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.22} depthWrite={false} />
       </mesh>
     </group>
   )
@@ -332,6 +344,11 @@ function Pontoon({ x, n }: { x: number; n: number }) {
 /** BIWTA terminal building on the bank beside the ghat. */
 function TerminalBuilding({ x }: { x: number }) {
   const night = useGame((s) => s.night)
+  const sign = signTexture('biwta', [{ text: 'যাত্রী টার্মিনাল', size: 110 }, { text: 'BIWTA PASSENGER TERMINAL', size: 60, color: C.green }], {
+    w: 1024,
+    h: 240,
+    flowers: false,
+  })
   return (
     <group position={[x, 0, BANK + 3.6]}>
       <mesh position={[0, 3, 0]} castShadow receiveShadow>
@@ -342,19 +359,22 @@ function TerminalBuilding({ x }: { x: number }) {
         <boxGeometry args={[22.4, 0.3, 6.4]} />
         <meshStandardMaterial color={C.green} />
       </mesh>
-      {Array.from({ length: 7 }, (_, i) => -9 + i * 3).flatMap((ax) => [
-        <mesh key={'d' + ax} position={[ax, 1.3, -3.01]}>
-          <planeGeometry args={[1.8, 2.6]} />
-          <meshStandardMaterial color="#3a2d22" emissive="#ffcf73" emissiveIntensity={night ? 0.6 : 0} />
-        </mesh>,
-        <mesh key={'w' + ax} position={[ax, 4.3, -3.01]}>
-          <planeGeometry args={[1.6, 1.2]} />
-          <meshStandardMaterial color="#5e8fa6" emissive="#ffcf73" emissiveIntensity={night ? 0.8 : 0} />
-        </mesh>,
-      ])}
-      <mesh position={[0, 3, 3.01]}>
-        <planeGeometry args={[22, 6]} />
-        <meshStandardMaterial color="#e6dcc4" />
+      {/* arched doors below, windows above, on both the river and the city side */}
+      {[-1, 1].flatMap((side) =>
+        Array.from({ length: 7 }, (_, i) => -9 + i * 3).flatMap((ax) => [
+          <mesh key={`d${side}:${ax}`} position={[ax, 1.3, side * 3.01]} rotation={[0, side > 0 ? 0 : Math.PI, 0]}>
+            <planeGeometry args={[1.8, 2.6]} />
+            <meshStandardMaterial color="#3a2d22" emissive="#ffcf73" emissiveIntensity={night ? 0.6 : 0} />
+          </mesh>,
+          <mesh key={`w${side}:${ax}`} position={[ax, 4.3, side * 3.01]} rotation={[0, side > 0 ? 0 : Math.PI, 0]}>
+            <planeGeometry args={[1.6, 1.2]} />
+            <meshStandardMaterial color="#5e8fa6" emissive="#ffcf73" emissiveIntensity={night ? 0.8 : 0} />
+          </mesh>,
+        ]),
+      )}
+      <mesh position={[0, 7, 3.05]}>
+        <planeGeometry args={[9, 2.1]} />
+        <meshStandardMaterial map={sign} emissiveMap={sign} emissive="#ffffff" emissiveIntensity={night ? 0.5 : 0} />
       </mesh>
     </group>
   )

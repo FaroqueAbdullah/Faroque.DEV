@@ -79,7 +79,7 @@ export function boxContact(b: GroundBox, x: number, z: number, r: number) {
   return contact
 }
 
-export const SPAWN = { x: 9, z: -306 }
+export const SPAWN = { x: -1.8, z: 4 }
 
 // Handy for debugging and automated tests in development builds only.
 if (import.meta.env.DEV) (window as unknown as { __player: typeof player }).__player = player
